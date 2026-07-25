@@ -10,8 +10,20 @@ const balanceAmount = document.querySelector("#balanceAmount");
 const incomeAmount = document.querySelector("#incomeAmount");
 const expenseAmount = document.querySelector("#expenseAmount");
 const submitButton = document.querySelector("#submitButton");
+const authStatus = document.querySelector("#authStatus");
+const authMessage = document.querySelector("#authMessage");
+const emailInput = document.querySelector("#emailInput");
+const passwordInput = document.querySelector("#passwordInput");
+const signInButton = document.querySelector("#signInButton");
+const signUpButton = document.querySelector("#signUpButton");
+const signOutButton = document.querySelector("#signOutButton");
 
 const storageKey = "uMoneyRecords";
+const supabaseUrl = "https://bgdphvfukmpyyiiylwcu.supabase.co";
+const supabaseKey = "sb_publishable__CKu_wgZzkruoKgrUywMPA_QuZHdgNr";
+const supabaseClient = window.supabase
+  ? window.supabase.createClient(supabaseUrl, supabaseKey)
+  : null;
 let records = [];
 let editingIndex = null;
 
@@ -31,6 +43,24 @@ function formatTotalMoney(amount) {
 function showMessage(text, isSuccess = false) {
   formMessage.textContent = text;
   formMessage.classList.toggle("success", isSuccess);
+}
+
+function showAuthMessage(text, isSuccess = false) {
+  authMessage.textContent = text;
+  authMessage.classList.toggle("success", isSuccess);
+}
+
+function updateAuthView(user) {
+  const isLoggedIn = Boolean(user);
+
+  authStatus.textContent = isLoggedIn
+    ? `已登录：${user.email}`
+    : "未登录。登录功能已接入，账单云同步将在下一步完成。";
+  signInButton.hidden = isLoggedIn;
+  signUpButton.hidden = isLoggedIn;
+  signOutButton.hidden = !isLoggedIn;
+  emailInput.disabled = isLoggedIn;
+  passwordInput.disabled = isLoggedIn;
 }
 
 function saveRecords() {
@@ -186,6 +216,96 @@ recordForm.addEventListener("submit", (event) => {
   renderRecords();
   updateSummary();
 });
+
+signUpButton.addEventListener("click", async () => {
+  if (!supabaseClient) {
+    showAuthMessage("Supabase 暂时无法连接，请检查网络后重试。");
+    return;
+  }
+
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+
+  if (!email || !password) {
+    showAuthMessage("请输入邮箱和密码。");
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.signUp({
+    email,
+    password,
+  });
+  passwordInput.value = "";
+
+  if (error) {
+    showAuthMessage(error.message);
+    return;
+  }
+
+  updateAuthView(data.user);
+  showAuthMessage("注册已提交。如果 Supabase 要求邮箱确认，请先去邮箱点击确认链接。", true);
+});
+
+signInButton.addEventListener("click", async () => {
+  if (!supabaseClient) {
+    showAuthMessage("Supabase 暂时无法连接，请检查网络后重试。");
+    return;
+  }
+
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+
+  if (!email || !password) {
+    showAuthMessage("请输入邮箱和密码。");
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password,
+  });
+  passwordInput.value = "";
+
+  if (error) {
+    showAuthMessage(error.message);
+    return;
+  }
+
+  updateAuthView(data.user);
+  showAuthMessage("登录成功。", true);
+});
+
+signOutButton.addEventListener("click", async () => {
+  if (!supabaseClient) {
+    showAuthMessage("Supabase 暂时无法连接，请检查网络后重试。");
+    return;
+  }
+
+  const { error } = await supabaseClient.auth.signOut();
+
+  if (error) {
+    showAuthMessage(error.message);
+    return;
+  }
+
+  emailInput.value = "";
+  passwordInput.value = "";
+  updateAuthView(null);
+  showAuthMessage("已退出登录。", true);
+});
+
+if (supabaseClient) {
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    updateAuthView(session?.user || null);
+  });
+
+  supabaseClient.auth.getUser().then(({ data }) => {
+    updateAuthView(data.user);
+  });
+} else {
+  showAuthMessage("Supabase 暂时无法连接，请检查网络后重试。");
+  updateAuthView(null);
+}
 
 loadRecords();
 renderRecords();

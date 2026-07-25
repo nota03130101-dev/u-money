@@ -13,6 +13,31 @@
       <p class="subtitle">简单记录每天的收入和支出。</p>
     </header>
 
+    <section class="panel auth-panel" aria-labelledby="auth-title">
+      <h2 id="auth-title">账号登录</h2>
+      <p class="auth-status" id="authStatus">未登录。登录功能已接入，账单云同步将在下一步完成。</p>
+
+      <form class="auth-form" id="authForm">
+        <label>
+          <span>邮箱</span>
+          <input id="emailInput" type="email" placeholder="例如：you@example.com">
+        </label>
+
+        <label>
+          <span>密码</span>
+          <input id="passwordInput" type="password" placeholder="至少 6 位密码">
+        </label>
+
+        <p class="form-message" id="authMessage"></p>
+
+        <div class="auth-actions">
+          <button id="signInButton" type="button">登录</button>
+          <button id="signUpButton" class="secondary-button" type="button">注册</button>
+          <button id="signOutButton" class="secondary-button" type="button" hidden>退出登录</button>
+        </div>
+      </form>
+    </section>
+
     <section class="balance-card" aria-label="当前余额">
       <span>当前余额</span>
       <strong id="balanceAmount">¥0.00</strong>
@@ -77,6 +102,7 @@
     </div>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -122,6 +122,35 @@ h2 {
   gap: 13px;
 }
 
+.auth-panel {
+  margin-bottom: 14px;
+}
+
+.auth-status {
+  margin-bottom: 14px;
+  color: #60716b;
+  line-height: 1.6;
+}
+
+.auth-form {
+  display: grid;
+  gap: 13px;
+}
+
+.auth-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.secondary-button {
+  color: #1f6b58;
+  background: #e3f1ec;
+}
+
+.secondary-button:hover {
+  background: #d4e8e1;
+}
+
 label span {
   display: block;
   margin-bottom: 7px;
@@ -301,6 +330,10 @@ button:active {
     grid-template-columns: 1fr 1fr;
     align-items: start;
     gap: 18px;
+  }
+
+  .auth-actions {
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .balance-card {
