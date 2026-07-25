@@ -26,6 +26,8 @@ const supabaseClient = window.supabase
   : null;
 let records = [];
 let editingIndex = null;
+let currentUser = null;
+let isCloudMode = false;
 
 function formatMoney(amount, type) {
   const sign = type === "收入" ? "+" : "-";
@@ -52,10 +54,12 @@ function showAuthMessage(text, isSuccess = false) {
 
 function updateAuthView(user) {
   const isLoggedIn = Boolean(user);
+  currentUser = user || null;
+  isCloudMode = isLoggedIn && Boolean(supabaseClient);
 
   authStatus.textContent = isLoggedIn
-    ? `已登录：${user.email}`
-    : "未登录。登录功能已接入，账单云同步将在下一步完成。";
+    ? `已登录：${user.email}。账单正在使用云端同步。`
+    : "未登录。当前账单只保存在这个浏览器。";
   signInButton.hidden = isLoggedIn;
   signUpButton.hidden = isLoggedIn;
   signOutButton.hidden = !isLoggedIn;
@@ -67,8 +71,15 @@ function saveRecords() {
   localStorage.setItem(storageKey, JSON.stringify(records));
 }
 
+function saveLocalRecords() {
+  if (!isCloudMode) {
+    saveRecords();
+  }
+}
+
 function loadRecords() {
   const savedRecords = localStorage.getItem(storageKey);
+  records = [];
 
   if (!savedRecords) {
     return;
@@ -81,6 +92,52 @@ function loadRecords() {
     records = [];
     localStorage.removeItem(storageKey);
   }
+}
+
+function normalizeCloudRecord(record) {
+  return {
+    id: record.id,
+    date: record.date,
+    type: record.type,
+    amount: Number(record.amount),
+    category: record.category,
+    note: record.note || "",
+  };
+}
+
+async function loadCloudRecords() {
+  if (!supabaseClient || !currentUser) {
+    return;
+  }
+
+  showMessage("正在读取云端账单...", true);
+
+  const { data, error } = await supabaseClient
+    .from("records")
+    .select("id, date, type, amount, category, note, created_at")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    showMessage(`读取云端账单失败：${error.message}`);
+    return;
+  }
+
+  records = data.map(normalizeCloudRecord);
+  editingIndex = null;
+  submitButton.textContent = "添加记录";
+  recordForm.reset();
+  renderRecords();
+  updateSummary();
+  showMessage("云端账单已同步。", true);
+}
+
+function loadLocalRecords() {
+  loadRecords();
+  editingIndex = null;
+  submitButton.textContent = "添加记录";
+  recordForm.reset();
+  renderRecords();
+  updateSummary();
 }
 
 function updateSummary() {
@@ -144,18 +201,30 @@ function renderRecords() {
       showMessage("正在编辑这条记录。", true);
     });
 
-    deleteButton.addEventListener("click", () => {
+    deleteButton.addEventListener("click", async () => {
       const confirmed = confirm("确定要删除这条记录吗？");
 
       if (!confirmed) {
         return;
       }
 
+      if (isCloudMode) {
+        const { error } = await supabaseClient
+          .from("records")
+          .delete()
+          .eq("id", record.id);
+
+        if (error) {
+          showMessage(`删除云端记录失败：${error.message}`);
+          return;
+        }
+      }
+
       records.splice(index, 1);
       editingIndex = null;
       submitButton.textContent = "添加记录";
       recordForm.reset();
-      saveRecords();
+      saveLocalRecords();
       showMessage("记录已删除。", true);
       renderRecords();
       updateSummary();
@@ -169,7 +238,7 @@ function renderRecords() {
   });
 }
 
-recordForm.addEventListener("submit", (event) => {
+recordForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const date = dateInput.value;
@@ -201,18 +270,55 @@ recordForm.addEventListener("submit", (event) => {
     note,
   };
 
-  if (editingIndex === null) {
+  if (isCloudMode) {
+    if (editingIndex === null) {
+      const { data, error } = await supabaseClient
+        .from("records")
+        .insert({
+          ...record,
+          user_id: currentUser.id,
+        })
+        .select("id, date, type, amount, category, note")
+        .single();
+
+      if (error) {
+        showMessage(`添加云端记录失败：${error.message}`);
+        return;
+      }
+
+      records.push(normalizeCloudRecord(data));
+      showMessage("记录已添加到云端。", true);
+    } else {
+      const recordId = records[editingIndex].id;
+      const { data, error } = await supabaseClient
+        .from("records")
+        .update(record)
+        .eq("id", recordId)
+        .select("id, date, type, amount, category, note")
+        .single();
+
+      if (error) {
+        showMessage(`修改云端记录失败：${error.message}`);
+        return;
+      }
+
+      records[editingIndex] = normalizeCloudRecord(data);
+      editingIndex = null;
+      submitButton.textContent = "添加记录";
+      showMessage("云端记录已修改。", true);
+    }
+  } else if (editingIndex === null) {
     records.push(record);
-    showMessage("记录已添加。", true);
+    showMessage("记录已添加到本地浏览器。", true);
   } else {
     records[editingIndex] = record;
     editingIndex = null;
     submitButton.textContent = "添加记录";
-    showMessage("记录已修改。", true);
+    showMessage("本地记录已修改。", true);
   }
 
   recordForm.reset();
-  saveRecords();
+  saveLocalRecords();
   renderRecords();
   updateSummary();
 });
@@ -242,8 +348,11 @@ signUpButton.addEventListener("click", async () => {
     return;
   }
 
-  updateAuthView(data.user);
+  updateAuthView(data.session?.user || null);
   showAuthMessage("注册已提交。如果 Supabase 要求邮箱确认，请先去邮箱点击确认链接。", true);
+  if (data.session?.user) {
+    await loadCloudRecords();
+  }
 });
 
 signInButton.addEventListener("click", async () => {
@@ -273,6 +382,7 @@ signInButton.addEventListener("click", async () => {
 
   updateAuthView(data.user);
   showAuthMessage("登录成功。", true);
+  await loadCloudRecords();
 });
 
 signOutButton.addEventListener("click", async () => {
@@ -291,22 +401,30 @@ signOutButton.addEventListener("click", async () => {
   emailInput.value = "";
   passwordInput.value = "";
   updateAuthView(null);
+  loadLocalRecords();
   showAuthMessage("已退出登录。", true);
 });
 
 if (supabaseClient) {
-  supabaseClient.auth.onAuthStateChange((event, session) => {
+  supabaseClient.auth.onAuthStateChange(async (event, session) => {
     updateAuthView(session?.user || null);
+
+    if (session?.user) {
+      await loadCloudRecords();
+    } else {
+      loadLocalRecords();
+    }
   });
 
-  supabaseClient.auth.getUser().then(({ data }) => {
+  supabaseClient.auth.getUser().then(async ({ data }) => {
     updateAuthView(data.user);
+    if (data.user) {
+      await loadCloudRecords();
+    }
   });
 } else {
   showAuthMessage("Supabase 暂时无法连接，请检查网络后重试。");
   updateAuthView(null);
 }
 
-loadRecords();
-renderRecords();
-updateSummary();
+loadLocalRecords();
