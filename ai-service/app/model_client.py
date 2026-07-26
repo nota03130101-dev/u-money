@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from pathlib import Path
 
@@ -16,6 +17,8 @@ from .models import (
     ParserResult,
     ParseTransactionsRequest,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _load_system_prompt(prompt_name: str) -> str:
@@ -82,6 +85,12 @@ class ModelClient:
         except httpx.TimeoutException as error:
             raise ModelTimeoutError() from error
         except httpx.HTTPStatusError as error:
+            logger.warning(
+                "Model API request failed: status=%s provider_request_id=%s",
+                error.response.status_code,
+                error.response.headers.get("x-request-id")
+                or error.response.headers.get("x-dashscope-request-id"),
+            )
             raise ServiceError(
                 503, "MODEL_UNAVAILABLE", "智能服务暂时不可用，请稍后重试。", True
             ) from error
@@ -127,6 +136,16 @@ class ModelClient:
                 response.raise_for_status()
         except httpx.TimeoutException as error:
             raise ModelTimeoutError() from error
+        except httpx.HTTPStatusError as error:
+            logger.warning(
+                "Model API request failed: status=%s provider_request_id=%s",
+                error.response.status_code,
+                error.response.headers.get("x-request-id")
+                or error.response.headers.get("x-dashscope-request-id"),
+            )
+            raise ServiceError(
+                503, "MODEL_UNAVAILABLE", "智能服务暂时不可用，请稍后重试。", True
+            ) from error
         except httpx.HTTPError as error:
             raise ServiceError(
                 503, "MODEL_UNAVAILABLE", "智能服务暂时不可用，请稍后重试。", True
