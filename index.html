@@ -53,6 +53,120 @@
       </div>
     </section>
 
+    <section class="panel ai-panel" aria-labelledby="ai-title">
+      <div class="section-heading">
+        <div>
+          <h2 id="ai-title">智能记账</h2>
+          <p class="section-note">AI 可能识别错误，请确认后再保存。</p>
+        </div>
+        <label class="ai-toggle" for="aiEnabledToggle">
+          <span>启用 AI</span>
+          <input id="aiEnabledToggle" type="checkbox" checked>
+        </label>
+      </div>
+
+      <form class="ai-form" id="aiParseForm">
+        <label>
+          <span>用一句话描述账单</span>
+          <textarea id="aiTextInput" maxlength="1000" rows="4" placeholder="例如：昨天午饭 32 元，坐地铁 4 元"></textarea>
+        </label>
+        <p class="form-message" id="aiMessage" aria-live="polite"></p>
+        <button id="aiParseButton" type="submit">开始识别</button>
+      </form>
+
+      <div class="ai-candidate-area" id="aiCandidateArea" hidden>
+        <p class="ai-warning">AI 可能识别错误，请逐条检查日期、类型、金额、类别和备注。</p>
+        <ul class="ai-candidate-list" id="aiCandidateList"></ul>
+        <div class="ai-candidate-actions">
+          <button id="confirmAiCandidatesButton" type="button">确认并保存</button>
+          <button id="cancelAiCandidatesButton" class="secondary-button" type="button">取消全部候选</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel insight-panel" aria-labelledby="filter-title">
+      <div class="section-heading">
+        <div>
+          <h2 id="filter-title">查看账单</h2>
+          <p class="section-note">按条件筛选记录，统计会随选定月份更新。</p>
+        </div>
+        <button id="clearFiltersButton" class="secondary-button compact-button" type="button">清除筛选</button>
+      </div>
+
+      <div class="filter-grid">
+        <label>
+          <span>月份</span>
+          <input id="monthFilter" type="month">
+        </label>
+
+        <label>
+          <span>类型</span>
+          <select id="typeFilter">
+            <option value="">全部类型</option>
+            <option value="支出">支出</option>
+            <option value="收入">收入</option>
+          </select>
+        </label>
+
+        <label>
+          <span>类别</span>
+          <select id="categoryFilter">
+            <option value="">全部类别</option>
+          </select>
+        </label>
+
+        <label>
+          <span>备注搜索</span>
+          <input id="keywordFilter" type="search" placeholder="输入备注关键词">
+        </label>
+      </div>
+
+      <div class="month-summary" aria-label="选定月份统计">
+        <p>
+          <span id="selectedMonthLabel">选定月份</span>
+          <b id="monthIncomeAmount">¥0.00</b>
+          <small>总收入</small>
+        </p>
+        <p>
+          <span>总支出</span>
+          <b id="monthExpenseAmount">¥0.00</b>
+          <small>总支出</small>
+        </p>
+        <p>
+          <span>余额变化</span>
+          <b id="monthBalanceAmount">¥0.00</b>
+          <small>收入减支出</small>
+        </p>
+      </div>
+    </section>
+
+    <section class="panel monthly-ai-panel" aria-labelledby="monthly-ai-title">
+      <div class="section-heading">
+        <div>
+          <h2 id="monthly-ai-title">AI 月度总结</h2>
+          <p class="section-note">AI 只解释月度汇总数据，不会保存或修改账单。</p>
+        </div>
+        <button id="aiMonthlySummaryButton" class="secondary-button compact-button" type="button">生成总结</button>
+      </div>
+      <p class="form-message" id="aiMonthlySummaryMessage" aria-live="polite"></p>
+      <div id="aiMonthlySummaryContent" class="monthly-ai-content" hidden>
+        <p id="aiMonthlySummaryMeta" class="monthly-ai-meta"></p>
+        <p class="ai-generated-label">AI 生成内容</p>
+        <div id="aiMonthlySummaryText" class="monthly-ai-text"></div>
+        <p class="monthly-ai-warning">该内容仅供参考，不构成投资、贷款、保险或医疗建议。</p>
+      </div>
+    </section>
+
+    <section class="panel chart-panel" aria-labelledby="chart-title">
+      <div class="section-heading">
+        <div>
+          <h2 id="chart-title">支出分类</h2>
+          <p class="section-note">显示当前筛选范围内的支出。</p>
+        </div>
+      </div>
+      <div id="expenseChart" class="expense-chart" aria-live="polite"></div>
+    </section>
+
     <div class="content-grid">
       <section class="panel" aria-labelledby="form-title">
         <h2 id="form-title">添加记录</h2>
@@ -78,8 +192,24 @@
 
           <label>
             <span>分类</span>
-            <input id="categoryInput" type="text" placeholder="例如：早餐">
+            <input id="categoryInput" type="text" list="commonCategoryOptions" placeholder="例如：早餐">
           </label>
+
+          <datalist id="commonCategoryOptions">
+            <option value="餐饮"></option>
+            <option value="交通"></option>
+            <option value="购物"></option>
+            <option value="居住"></option>
+            <option value="通讯"></option>
+            <option value="娱乐"></option>
+            <option value="医疗"></option>
+            <option value="教育"></option>
+            <option value="人情往来"></option>
+            <option value="工资"></option>
+            <option value="兼职"></option>
+            <option value="退款"></option>
+            <option value="其他"></option>
+          </datalist>
 
           <label>
             <span>备注</span>
@@ -93,7 +223,13 @@
       </section>
 
       <section class="panel" aria-labelledby="list-title">
-        <h2 id="list-title">记录列表</h2>
+        <div class="section-heading">
+          <div>
+            <h2 id="list-title">记录列表</h2>
+            <p class="section-note" id="recordCount">显示 0 条记录</p>
+          </div>
+          <button id="exportButton" class="secondary-button compact-button" type="button">导出 CSV</button>
+        </div>
 
         <ul class="record-list" id="recordList">
           <li class="empty-record">还没有记录，请先添加一条。</li>

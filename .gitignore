@@ -1,0 +1,16 @@
+# Environment files may contain API keys or deployment settings.
+.env
+.env.*
+!.env.example
+
+# Private keys and certificates must never be committed.
+*.pem
+*.key
+
+# Python and test tooling generate these files locally.
+__pycache__/
+.pytest_cache/
+
+# Keep the evaluation source and formal report, not timestamped run artifacts.
+evals/results/*.json
+evals/results/*.md

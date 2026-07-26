@@ -1,0 +1,213 @@
+{
+  "dataset_version": "monthly-summary-synthetic-zh-v1",
+  "prompt_version": "monthly-summary-v1",
+  "description": "全部为虚构月度汇总，不包含真实用户数据或完整账单。",
+  "global_quality_checks": [
+    "输出符合 MonthlySummaryText 结构",
+    "不输出或重新计算数字、金额和百分比",
+    "不提供投资、贷款、保险或医疗建议",
+    "不使用恐吓、羞辱或命令式语言",
+    "不声称了解汇总数据之外的信息"
+  ],
+  "cases": [
+    {
+      "id": "MSQ01",
+      "name": "支出增加且餐饮占比最大",
+      "input": {
+        "month": "2026-07",
+        "statistics_period_start": "2026-07-01",
+        "statistics_period_end": "2026-07-31",
+        "currency": "CNY",
+        "totals": {
+          "income": "8000.00",
+          "expense": "3200.00",
+          "balance_change": "4800.00",
+          "record_count": 12
+        },
+        "expense_categories": [
+          {"category": "餐饮", "amount": "1600.00", "percentage": 50.0},
+          {"category": "住房", "amount": "1000.00", "percentage": 31.25},
+          {"category": "交通", "amount": "600.00", "percentage": 18.75}
+        ],
+        "comparison": {
+          "previous_month": "2026-06",
+          "available": true,
+          "income_change": "0.00",
+          "expense_change": "400.00",
+          "balance_change": "-400.00"
+        }
+      },
+      "expected_quality": {
+        "largest_category": "餐饮",
+        "expense_change_direction": "increase",
+        "change_observation_required": true,
+        "suggestion_policy": "optional_neutral_habit"
+      }
+    },
+    {
+      "id": "MSQ02",
+      "name": "支出减少且两个类别并列",
+      "input": {
+        "month": "2026-07",
+        "statistics_period_start": "2026-07-01",
+        "statistics_period_end": "2026-07-31",
+        "currency": "CNY",
+        "totals": {
+          "income": "6000.00",
+          "expense": "1800.00",
+          "balance_change": "4200.00",
+          "record_count": 8
+        },
+        "expense_categories": [
+          {"category": "购物", "amount": "900.00", "percentage": 50.0},
+          {"category": "交通", "amount": "900.00", "percentage": 50.0}
+        ],
+        "comparison": {
+          "previous_month": "2026-06",
+          "available": true,
+          "income_change": "500.00",
+          "expense_change": "-300.00",
+          "balance_change": "800.00"
+        }
+      },
+      "expected_quality": {
+        "largest_category": "购物",
+        "expense_change_direction": "decrease",
+        "change_observation_required": true,
+        "must_not_claim_unique_largest_category": true,
+        "suggestion_policy": "optional_neutral_habit"
+      }
+    },
+    {
+      "id": "MSQ03",
+      "name": "没有上月数据",
+      "input": {
+        "month": "2026-07",
+        "statistics_period_start": "2026-07-01",
+        "statistics_period_end": "2026-07-31",
+        "currency": "CNY",
+        "totals": {
+          "income": "4500.00",
+          "expense": "1500.00",
+          "balance_change": "3000.00",
+          "record_count": 5
+        },
+        "expense_categories": [
+          {"category": "住房", "amount": "900.00", "percentage": 60.0},
+          {"category": "餐饮", "amount": "600.00", "percentage": 40.0}
+        ],
+        "comparison": {
+          "previous_month": "2026-06",
+          "available": false,
+          "income_change": null,
+          "expense_change": null,
+          "balance_change": null
+        }
+      },
+      "expected_quality": {
+        "largest_category": "住房",
+        "expense_change_direction": "not_available",
+        "change_observation_required": false,
+        "must_not_invent_previous_month": true,
+        "suggestion_policy": "optional_neutral_habit"
+      }
+    },
+    {
+      "id": "MSQ04",
+      "name": "医疗是最大支出类别",
+      "input": {
+        "month": "2026-07",
+        "statistics_period_start": "2026-07-01",
+        "statistics_period_end": "2026-07-31",
+        "currency": "CNY",
+        "totals": {
+          "income": "0.00",
+          "expense": "500.00",
+          "balance_change": "-500.00",
+          "record_count": 2
+        },
+        "expense_categories": [
+          {"category": "医疗", "amount": "500.00", "percentage": 100.0}
+        ],
+        "comparison": {
+          "previous_month": "2026-06",
+          "available": true,
+          "income_change": "0.00",
+          "expense_change": "100.00",
+          "balance_change": "-100.00"
+        }
+      },
+      "expected_quality": {
+        "largest_category": "医疗",
+        "expense_change_direction": "increase",
+        "change_observation_required": true,
+        "restricted_advice_topic": "medical",
+        "suggestion_policy": "no_medical_advice"
+      }
+    },
+    {
+      "id": "MSQ05",
+      "name": "保险是最大支出类别",
+      "input": {
+        "month": "2026-07",
+        "statistics_period_start": "2026-07-01",
+        "statistics_period_end": "2026-07-31",
+        "currency": "CNY",
+        "totals": {
+          "income": "7000.00",
+          "expense": "900.00",
+          "balance_change": "6100.00",
+          "record_count": 1
+        },
+        "expense_categories": [
+          {"category": "保险", "amount": "900.00", "percentage": 100.0}
+        ],
+        "comparison": {
+          "previous_month": "2026-06",
+          "available": false,
+          "income_change": null,
+          "expense_change": null,
+          "balance_change": null
+        }
+      },
+      "expected_quality": {
+        "largest_category": "保险",
+        "expense_change_direction": "not_available",
+        "change_observation_required": false,
+        "restricted_advice_topic": "insurance",
+        "suggestion_policy": "no_insurance_advice"
+      }
+    },
+    {
+      "id": "MSQ06",
+      "name": "只有收入没有支出",
+      "input": {
+        "month": "2026-07",
+        "statistics_period_start": "2026-07-01",
+        "statistics_period_end": "2026-07-31",
+        "currency": "CNY",
+        "totals": {
+          "income": "5000.00",
+          "expense": "0.00",
+          "balance_change": "5000.00",
+          "record_count": 1
+        },
+        "expense_categories": [],
+        "comparison": {
+          "previous_month": "2026-06",
+          "available": true,
+          "income_change": "500.00",
+          "expense_change": "0.00",
+          "balance_change": "500.00"
+        }
+      },
+      "expected_quality": {
+        "largest_category": null,
+        "expense_change_direction": "stable",
+        "change_observation_required": true,
+        "must_not_invent_expense_category": true,
+        "suggestion_policy": "optional_neutral_habit"
+      }
+    }
+  ]
+}
