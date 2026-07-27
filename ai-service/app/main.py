@@ -9,6 +9,8 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.datastructures import Headers
+from starlette.responses import Response
 
 from .auth import AuthenticatedUser, get_current_user
 from .config import Settings
@@ -26,6 +28,19 @@ from .models import (
 from .rate_limit import InMemoryRateLimiter
 
 logger = logging.getLogger("u_money_ai")
+
+
+class LoggingCORSMiddleware(CORSMiddleware):
+    def preflight_response(self, request_headers: Headers) -> Response:
+        response = super().preflight_response(request_headers)
+        if response.status_code >= 400:
+            logger.warning(
+                "CORS preflight rejected: origin=%s method=%s headers=%s",
+                request_headers.get("origin"),
+                request_headers.get("access-control-request-method"),
+                request_headers.get("access-control-request-headers"),
+            )
+        return response
 
 
 def _request_id(request: Request) -> str:
@@ -50,7 +65,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
 
     app.add_middleware(
-        CORSMiddleware,
+        LoggingCORSMiddleware,
         allow_origins=list(active_settings.allowed_origins),
         allow_credentials=False,
         allow_methods=["GET", "POST", "OPTIONS"],
