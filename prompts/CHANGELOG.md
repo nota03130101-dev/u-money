@@ -6,6 +6,7 @@
 
 - 将交易候选项的精确字段清单直接加入实际发送给模型的系统说明。
 - 固定 `schema_version` 为 `"1.0"`，固定 `prompt_version` 为 `"transaction-parser-v1"`。
+- 增加 13 个生活支出分类，并加入奶粉、日用品等常见表达的固定映射规则。
 - 明确 `assumptions` 必须为数组，`confirmation_questions` 只能位于最外层。
 - 明确 `candidate_id`、`confidence`、金额和日期的格式，避免模型自行猜测字段名称。
 - 不改变 JSON 结构、用户确认流程或数据保存权限。
