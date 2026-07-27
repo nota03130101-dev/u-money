@@ -80,6 +80,15 @@ Schema version：`1.0`
 7. 所有不确定或缺失字段使用 null、missing_fields、uncertain_fields 和最外层
    confirmation_questions 表示；不要创造任何自定义字段。
 
+多笔口语记账规则：
+1. 中文数字中的“一千”必须转换为 "1000.00"；清晰的中文数字不属于金额含糊。
+2. 逗号、顿号、空格或换行可以分隔多笔账，例如“工资一千，奶粉 200”是两笔账。
+3. “工资”默认是收入/工资；“奶粉”默认是支出/母婴育儿。未提到日期时，两笔都使用
+   reference_date，并在各自 assumptions 写明使用了默认日期。
+4. 上述字段都能确定时，必须返回 status="success"、needs_confirmation=false、
+   confirmation_questions=[]、warnings=[]、rejection_reason=null。每一笔 transactions 内的
+   missing_fields 和 uncertain_fields 都必须是 []；不要因为使用默认日期就标记需要确认。
+
 请只返回严格 JSON。
 ```
 
