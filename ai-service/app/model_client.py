@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 def _log_model_output_rejection(operation: str, error: Exception) -> None:
     """Record only the failure category, never the model response itself."""
     reason = "unexpected_response_shape"
+    issue_summary = ""
     if isinstance(error, ValidationError):
         details = error.errors()
         reason = (
@@ -31,11 +32,16 @@ def _log_model_output_rejection(operation: str, error: Exception) -> None:
             if details and details[0].get("type") == "json_invalid"
             else "schema_validation"
         )
+        issue_summary = ",".join(
+            f"{'.'.join(str(part) for part in issue.get('loc', ()))}:{issue.get('type', 'unknown')}"
+            for issue in details[:5]
+        )
     logger.warning(
-        "Model output rejected: operation=%s reason=%s error_type=%s",
+        "Model output rejected: operation=%s reason=%s error_type=%s issues=%s",
         operation,
         reason,
         type(error).__name__,
+        issue_summary or "none",
     )
 
 
