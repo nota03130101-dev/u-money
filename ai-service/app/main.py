@@ -53,8 +53,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         CORSMiddleware,
         allow_origins=list(active_settings.allowed_origins),
         allow_credentials=False,
-        allow_methods=["GET", "POST"],
-        allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+        allow_methods=["GET", "POST", "OPTIONS"],
+        # The allowed origin remains explicit. Browsers may add harmless
+        # request headers during preflight, so do not reject those requests.
+        allow_headers=["*"],
     )
 
     @app.middleware("http")
