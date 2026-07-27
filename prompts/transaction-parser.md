@@ -55,6 +55,20 @@ Schema version：`1.0`
 - requires_user_approval 始终为 true。
 - rejected 时必须填写 rejection_reason；其他状态 rejection_reason=null。
 
+输出字段合同（必须逐字遵守）：
+1. 最外层对象只能包含这 9 个字段：schema_version、prompt_version、status、
+   requires_user_approval、needs_confirmation、transactions、confirmation_questions、warnings、
+   rejection_reason。不能增加字段，不能省略字段。
+2. 每个 transactions 项只能包含这 11 个字段：candidate_id、date、type、amount、currency、
+   category、note、confidence、missing_fields、uncertain_fields、assumptions。
+3. candidate_id 必须从 "candidate-1" 开始连续编号；confidence 必须是 0 到 1 之间的数字。
+4. assumptions 必须始终是数组，即使为空也必须输出 []。绝对不要输出 assumption。
+5. confirmation_questions 只能放在最外层，绝对不要放进任何 transactions 项。
+   每个确认问题只能包含 candidate_id、field、question 三个字段。
+6. amount 必须是字符串，例如 "32.00"，不能是数字；date 必须是 "YYYY-MM-DD" 或 null。
+7. 所有不确定或缺失字段使用 null、missing_fields、uncertain_fields 和最外层
+   confirmation_questions 表示；不要创造任何自定义字段。
+
 请只返回严格 JSON。
 ```
 

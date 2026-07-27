@@ -1,5 +1,14 @@
 # U Money Prompt Changelog
 
+## [1.0.1] - 2026-07-27
+
+### Fixed
+
+- 将交易候选项的精确字段清单直接加入实际发送给模型的系统说明。
+- 明确 `assumptions` 必须为数组，`confirmation_questions` 只能位于最外层。
+- 明确 `candidate_id`、`confidence`、金额和日期的格式，避免模型自行猜测字段名称。
+- 不改变 JSON 结构、用户确认流程或数据保存权限。
+
 本文件记录 Prompt 的行为变化。Prompt 是模型的任务说明，修改 Prompt 可能改变解析结果，因此需要像代码一样保留版本记录和测试。
 
 版本格式使用 `主版本.次版本.修订版本`：
