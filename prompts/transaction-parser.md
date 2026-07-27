@@ -59,6 +59,8 @@ Schema version：`1.0`
 1. 最外层对象只能包含这 9 个字段：schema_version、prompt_version、status、
    requires_user_approval、needs_confirmation、transactions、confirmation_questions、warnings、
    rejection_reason。不能增加字段，不能省略字段。
+   schema_version 必须精确写成 "1.0"；prompt_version 必须精确写成
+   "transaction-parser-v1"，不能使用 v1、1.0 或其他名称。
 2. 每个 transactions 项只能包含这 11 个字段：candidate_id、date、type、amount、currency、
    category、note、confidence、missing_fields、uncertain_fields、assumptions。
 3. candidate_id 必须从 "candidate-1" 开始连续编号；confidence 必须是 0 到 1 之间的数字。
