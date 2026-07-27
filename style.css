@@ -11,13 +11,13 @@
   --line-strong: #aeb9c1;
   --black: #111417;
   --black-soft: #1a2025;
-  --accent: #008eaa;
-  --accent-soft: #e4f7fa;
-  --income: #007f92;
+  --accent: #15191d;
+  --accent-soft: #eef1f3;
+  --income: #283138;
   --expense: #bd3d3d;
   --expense-soft: #fff1f1;
-  --warning: #7b5b00;
-  --warning-soft: #fff8df;
+  --warning: #4b5359;
+  --warning-soft: #f1f3f4;
 }
 
 html,
@@ -86,6 +86,10 @@ h2 {
   border-radius: 8px;
   background: var(--surface);
   box-shadow: 0 8px 24px rgba(21, 25, 29, 0.06);
+}
+
+.app > .panel {
+  margin-bottom: 16px;
 }
 
 .balance-card {
@@ -489,7 +493,7 @@ input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(0, 142, 170, 0.16);
+  box-shadow: 0 0 0 3px rgba(21, 25, 29, 0.12);
   outline: none;
 }
 
@@ -657,6 +661,21 @@ button:active {
     grid-template-columns: 1fr 1fr;
     align-items: start;
     gap: 18px;
+  }
+
+  .auth-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 16px;
+  }
+
+  .auth-form .form-message,
+  .auth-actions {
+    grid-column: 1 / -1;
+  }
+
+  .auth-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: 560px;
   }
 
   .filter-grid {
