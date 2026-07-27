@@ -56,16 +56,15 @@ mock 模式只接受非空 Bearer token，用于让本地前端流程与正式�
 只有准备好模型服务和 Supabase Auth 验证后，才可以把 `MOCK_MODE` 改为 `false`。真实模式需要：
 
 ```text
-# Alibaba Cloud Model Studio / Qwen. Copy MODEL_API_BASE_URL from the API Host
-# shown for your Beijing-region key, and keep MODEL_API_KEY only in the server.
-MODEL_API_BASE_URL=
+# DeepSeek. Keep MODEL_API_KEY only in the server.
+MODEL_API_BASE_URL=https://api.deepseek.com
 MODEL_API_KEY=
-MODEL_NAME=qwen-flash
+MODEL_NAME=deepseek-v4-flash
 SUPABASE_URL=
 SUPABASE_PUBLISHABLE_KEY=
 ```
 
-Qwen uses JSON-object output in its OpenAI-compatible API. U Money validates the
-returned JSON with Pydantic before returning any candidate transaction to the page.
+DeepSeek uses JSON-object output in its OpenAI-compatible API. U Money validates
+the returned JSON with Pydantic before returning any candidate transaction to the page.
 
 不要把真实值写进前端、GitHub 或聊天消息。

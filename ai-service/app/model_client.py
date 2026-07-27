@@ -36,6 +36,9 @@ class ModelClient:
         self.mock_parser = MockTransactionParser()
         self.mock_monthly_summary = MockMonthlySummary()
 
+    def _uses_deepseek(self) -> bool:
+        return "api.deepseek.com" in self.settings.model_api_base_url
+
     async def parse(self, request: ParseTransactionsRequest) -> ParserResult:
         if self.settings.mock_mode:
             return await self.mock_parser.parse(request)
@@ -68,10 +71,12 @@ class ModelClient:
                     ),
                 },
             ],
-            # Qwen's OpenAI-compatible endpoint returns a JSON object. Pydantic
+            # The provider returns a JSON object. Pydantic
             # validates that JSON below before anything reaches the frontend.
             "response_format": {"type": "json_object"},
         }
+        if self._uses_deepseek():
+            payload["thinking"] = {"type": "disabled"}
         url = f"{self.settings.model_api_base_url.rstrip('/')}/chat/completions"
 
         try:
@@ -124,6 +129,8 @@ class ModelClient:
             # Keep the model output simple and validate it on our own server.
             "response_format": {"type": "json_object"},
         }
+        if self._uses_deepseek():
+            payload["thinking"] = {"type": "disabled"}
         url = f"{self.settings.model_api_base_url.rstrip('/')}/chat/completions"
 
         try:
