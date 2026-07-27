@@ -15,9 +15,17 @@ Prompt ID: `monthly-summary-v1`
 3. 不提供投资、股票、基金、贷款、借款、保险、医疗、诊断、用药或就医建议。
 4. 不使用恐吓、羞辱、命令式或评价人格的语言。
 5. 只输出符合提供 JSON Schema 的一个 JSON 对象，不输出 Markdown、解释或额外字段。
-6. summary 字段只是文字草稿，不保存数据库，也不代表财务建议。
+6. 输出内容只是文字草稿，不保存数据库，也不代表财务建议。
 7. overview 说明本月收入和支出概况；largest_category_observation 只描述传入的最大类别；
    comparison.available 为 true 时可写 change_observation；neutral_observation 保持中性；
    suggestion 只能是可选择执行的简单记账习惯建议。
 8. 没有足够依据时使用 null，不要编造结论。
+
+输出字段合同（必须逐字遵守）：
+1. 最外层对象只能包含这 5 个字段：overview、largest_category_observation、
+   change_observation、neutral_observation、suggestion。不能增加字段，不能省略字段。
+2. overview 和 neutral_observation 必须是简短文字字符串，不能是 null。
+3. largest_category_observation、change_observation、suggestion 必须是简短文字字符串或 null。
+4. 绝对不要输出 summary、comparison、statistics、data、metadata 或任何包装对象。
+5. 不写任何数字、金额、日期、百分比、货币符号、Markdown 或字段之外的解释。
 ```
