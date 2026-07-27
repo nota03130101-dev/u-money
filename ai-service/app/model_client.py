@@ -21,6 +21,24 @@ from .models import (
 logger = logging.getLogger(__name__)
 
 
+def _log_model_output_rejection(operation: str, error: Exception) -> None:
+    """Record only the failure category, never the model response itself."""
+    reason = "unexpected_response_shape"
+    if isinstance(error, ValidationError):
+        details = error.errors()
+        reason = (
+            "invalid_json"
+            if details and details[0].get("type") == "json_invalid"
+            else "schema_validation"
+        )
+    logger.warning(
+        "Model output rejected: operation=%s reason=%s error_type=%s",
+        operation,
+        reason,
+        type(error).__name__,
+    )
+
+
 def _load_system_prompt(prompt_name: str) -> str:
     prompt_path = Path(__file__).resolve().parents[2] / "prompts" / prompt_name
     text = prompt_path.read_text(encoding="utf-8")
@@ -108,6 +126,7 @@ class ModelClient:
             content = response.json()["choices"][0]["message"]["content"]
             return ParserResult.model_validate_json(content)
         except (KeyError, IndexError, TypeError, ValueError, ValidationError) as error:
+            _log_model_output_rejection("parse_transactions", error)
             raise ModelOutputError() from error
 
     async def _summarize_with_model(self, request: MonthlySummaryRequest) -> MonthlySummaryText:
@@ -162,4 +181,5 @@ class ModelClient:
             content = response.json()["choices"][0]["message"]["content"]
             return MonthlySummaryText.model_validate_json(content)
         except (KeyError, IndexError, TypeError, ValueError, ValidationError) as error:
+            _log_model_output_rejection("monthly_summary", error)
             raise ModelOutputError() from error
